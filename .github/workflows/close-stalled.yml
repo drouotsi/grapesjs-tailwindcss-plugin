@@ -1,0 +1,24 @@
+name: Close stale issues
+on:
+  schedule:
+    - cron: 0 0 * * *  # ogni giorno a mezzanotte
+
+jobs:
+  stale:
+    permissions:
+      issues: write  # for actions/stale to close stale issues
+      pull-requests: write  # for actions/stale to close stale PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639  # v9.1.0
+        with:
+          days-before-stale: 30       # dopo 30 giorni di inattività, segna come stalled
+          days-before-close: 7        # se restano stalled per altri 7 giorni, chiude
+          stale-issue-message: This issue has been automatically marked as stale due to inactivity. Please comment if you want to keep it open.
+          stale-pr-message: This PR has been automatically marked as stale due to inactivity. Please comment if you want to keep it open.
+          close-issue-message: Closing this because it has stalled. Feel free to reopen if you have any questions.
+          close-pr-message: Closing this because it has stalled. Feel free to reopen if you have any questions.
+          stale-issue-label: stalled
+          stale-pr-label: stalled
+          exempt-issue-labels: never-stale
+          exempt-pr-labels: never-stale
