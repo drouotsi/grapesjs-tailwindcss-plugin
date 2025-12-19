@@ -6,6 +6,14 @@ import * as assets from "./assets";
 
 import type { Editor } from "grapesjs";
 
+declare module "grapesjs" {
+  interface Editor {
+    userCustomCss: typeof Editor.prototype.getCss;
+    tailwindStyle: string;
+    tailwindStyleSeparator: string;
+  }
+}
+
 export type TailwindPluginOptions = {
   /**
    * The prefix to use for Tailwind CSS classes.
@@ -76,6 +84,8 @@ export default (editor: Editor, opts: TailwindPluginOptions = {}) => {
    */
   const STYLE_ID = "tailwindcss-plugin";
 
+  const tailwindStyleSeparator = "/* ---- TAILWIND CSS - DO NOT EDIT ---- */";
+
   /**
    * The current Tailwind CSS compiler.
    *
@@ -115,9 +125,25 @@ export default (editor: Editor, opts: TailwindPluginOptions = {}) => {
 
   /** Override the editor's getCss method to append the generated Tailwind CSS */
   const originalGetCss = editor.getCss.bind(editor);
+  const setStyle = editor.setStyle.bind(editor);
+  editor.userCustomCss = originalGetCss;
+  editor.tailwindStyleSeparator = tailwindStyleSeparator;
+  editor.tailwindStyle = tailwindStyle?.textContent ?? "";
   editor.getCss = () => {
     const originalCss = originalGetCss();
-    return `${originalCss}\n${tailwindStyle?.textContent ?? ""}`;
+    return `${originalCss}\n${tailwindStyleSeparator}\n${tailwindStyle?.textContent ?? ""}`;
+  };
+  editor.setStyle = (style: any, opt?: any) => {
+    let styleToSet = style;
+    if (typeof style === "string") {
+      const styleParts = style.split(tailwindStyleSeparator, 1);
+      if (styleParts.length) {
+        // Extract classes from the Tailwind CSS part
+        styleToSet = styleParts[0];
+      }
+    }
+    setStyle(styleToSet, opt);
+    return editor;
   };
 
   /**
